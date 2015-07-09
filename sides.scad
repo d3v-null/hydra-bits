@@ -1,23 +1,23 @@
 //    Sides:
 //
-//     |   $A  $B   C          D   
-//     | $s| $w| c*|     d*   |
-//   _    ______                _  M
-//  $s   /   *  ∖__              
-//   _  /  _____   ∖__          _ $N
-//  $s |   |   |∖     ∖__            
-//   _ |___| x | ∖       ∖__    $n _ Ns       
-//         |___|__∖         ∖   _ $O
-//             |   |         |    
-//             | x |         |    
-//             |   |         |  o
-//             | x |         |            
-//   _    _____|___|         |  _ P
-//  $s   /   *               |   
-//   _  /  _____             |  _ Q
-//  $s |   |   |∖            |    
-//   _ |___| x | ∖           |  $q _ Qs     
-//         |___|  ∖__________|  _ _
+//     |   $A  $B   C     D   
+//     | $s| $w| c*|  d* |
+//   _    ______            _  M
+//  $s   /   *  ∖          
+//   _  /  _____  ∖         _ $N
+//  $s |   |   |∖   ∖            
+//   _ |___| x | ∖    ∖     $n _ Ns       
+//         |___|__∖     ∖   _ $O
+//             |   |     |    
+//             | x |     |    
+//             |   |     |  o
+//             | x |     |            
+//   _    _____|___|     |  _ P
+//  $s   /   *           |   
+//   _  /  _____         |  _ Q
+//  $s |   |   |∖        |    
+//   _ |___| x | ∖       |  $q _ Qs     
+//         |___|  ∖______|  _ _
 
 //      Front:
 // 
@@ -42,6 +42,7 @@
 //      
 // 
 module prusa_frame(){
+    f = 5;
     difference() {   
         polygon([
             [ 0, 0],
@@ -51,8 +52,12 @@ module prusa_frame(){
         ]);
         polygon([
             [$l,$Q],
+            [$l-f,$Q+f],
+            [$l-f,$O-f],
             [$l,$O],
             [$L,$O],
+            [$L+f,$O-f],
+            [$L+f,$Q+f],
             [$L,$Q]
         ]);
     }
@@ -96,6 +101,15 @@ module case_front() {
     ]);
 }
 
+module case_back() {
+    polygon([
+        [$I, 0],
+        [$I,$O],
+        [$J,$O],
+        [$J, 0]
+    ]);
+}
+
 //prusa i3:
 $s = 15;    // support thickness
 $w = 6.3;   // frame width
@@ -104,13 +118,17 @@ $q = 35;    // frame bottom height
 $N = 370;   // top of frame
 $n = 40;    // frame top height
 
+fc = 285;
+bc = 170;
+
 //re-measure this
 $l = 65;
 $r = 65;
 $W = 400;
 $a = 3;
 
-step = 65;
+head = 65;
+step = 50;
 
 // calculations
 $A = $s;
@@ -121,11 +139,19 @@ $L = $W - $r;
 $K = $L - $a;
 $H = $l + $a;
 
-
 //printer frame
-rotate([90,0,90])
-linear_extrude($w)
-prusa_frame();
+
+# rotate([90,0,90]){
+    linear_extrude($w)
+    prusa_frame();
+
+    //motors
+    for (i = [0:1]) {
+        translate([i * ($W-step), 0, $w])
+        cube([step, step, step]);
+    }
+}
+
 
 //left
 translate([0,$H,0])
@@ -133,12 +159,12 @@ rotate([90,0,0]){
     // front left
     translate([-$s, 0 ,0])
     linear_extrude($a)
-    case_side(step, 285-step);
+    case_side(head, fc-head);
     // back left
     translate([$s+$w, 0, -$a])
     linear_extrude($a)
     scale([-1, 1, 1]) 
-    case_side($s, 170-$s);
+    case_side($s, bc-$s);
 }
 
 //right
@@ -147,16 +173,22 @@ rotate([90,0,0]){
     // front left
     translate([-$s, 0 ,-$a])
     linear_extrude($a)
-    case_side(step, 285-step);
+    case_side(head, fc-head);
     // back left
     translate([$s+$w, 0, 0])
     linear_extrude($a)
     scale([-1, 1, 1]) 
-    case_side($s, 170-$s);
+    case_side($s, bc-$s);
 }
 
 //front
-translate([285+$a,0,0])
+translate([fc+$a,0,0])
+rotate([90,0,90])
+linear_extrude($a)
+case_front();
+
+//back
+translate([-bc,0,0])
 rotate([90,0,90])
 linear_extrude($a)
 case_front();
